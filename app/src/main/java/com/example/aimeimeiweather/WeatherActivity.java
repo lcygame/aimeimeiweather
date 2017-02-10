@@ -1,5 +1,6 @@
 package com.example.aimeimeiweather;
 
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.os.Build;
@@ -21,6 +22,7 @@ import android.widget.Toast;
 import com.bumptech.glide.Glide;
 import com.example.aimeimeiweather.gson.Forecast;
 import com.example.aimeimeiweather.gson.Weather;
+import com.example.aimeimeiweather.service.AutoUpdateService;
 import com.example.aimeimeiweather.util.HttpUtil;
 import com.example.aimeimeiweather.util.Utility;
 
@@ -61,15 +63,6 @@ public class WeatherActivity extends AppCompatActivity {
         }
         setContentView(R.layout.activity_weather);
         //初始化各控件
-        initUI();
-        //初始化数据
-        initData();
-    }
-
-    /**
-     * 初始化各控件
-     */
-    private void initUI() {
         weatherLayout = (ScrollView) findViewById(R.id.weather_layout);
         titleCity = (TextView) findViewById(R.id.title_city);               //城市名
         titleUpdateTime = (TextView) findViewById(R.id.title_update_time);  //更新时间
@@ -87,26 +80,7 @@ public class WeatherActivity extends AppCompatActivity {
         navButton = (Button) findViewById(R.id.nav_button);
         //下拉刷新
         swipeRefresh = (SwipeRefreshLayout) findViewById(R.id.swipe_refresh);
-
         swipeRefresh.setColorSchemeResources(R.color.colorPrimary);//设置下拉进度条颜色
-        swipeRefresh.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
-            @Override
-            public void onRefresh() {
-                requestWeather(mWeatherId);
-            }
-        });
-        navButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                drawerLayout.openDrawer(GravityCompat.START);//打开滑动菜单
-            }
-        });
-    }
-
-    /**
-     * 初始化数据
-     */
-    private void initData() {
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
         String weatherString = prefs.getString("weather", null);
         if (weatherString != null) {
@@ -120,6 +94,18 @@ public class WeatherActivity extends AppCompatActivity {
             weatherLayout.setVisibility(View.INVISIBLE);
             requestWeather(mWeatherId);
         }
+        swipeRefresh.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
+            @Override
+            public void onRefresh() {
+                requestWeather(mWeatherId);
+            }
+        });
+        navButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                drawerLayout.openDrawer(GravityCompat.START);//打开滑动菜单
+            }
+        });
         String bingPic = prefs.getString("bing_pic", null);
         if (bingPic != null) {
             Glide.with(this).load(bingPic).into(bingPicImg);//内存中读取图片
@@ -127,6 +113,7 @@ public class WeatherActivity extends AppCompatActivity {
             loadBingPic();//请求今日的“必应”背景图
         }
     }
+
 
     /**
      * 根据天气id请求城市天气信息。
@@ -146,6 +133,7 @@ public class WeatherActivity extends AppCompatActivity {
                             SharedPreferences.Editor editor = PreferenceManager.getDefaultSharedPreferences(WeatherActivity.this).edit();
                             editor.putString("weather", responseText);
                             editor.apply();
+                            mWeatherId = weather.basic.weatherId;//保存更新后的Id
                             showWeatherInfo(weather);//保存数据后再调用该方法读取数据
                         } else {
                             Toast.makeText(WeatherActivity.this, "获取天气信息失败", Toast.LENGTH_SHORT).show();
@@ -233,5 +221,7 @@ public class WeatherActivity extends AppCompatActivity {
         carWashText.setText(carWash);
         sportText.setText(sport);
         weatherLayout.setVisibility(View.VISIBLE);
+        Intent intent = new Intent(this, AutoUpdateService.class);
+        startService(intent);
     }
 }
