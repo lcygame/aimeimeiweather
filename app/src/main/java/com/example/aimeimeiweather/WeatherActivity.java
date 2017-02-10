@@ -202,12 +202,12 @@ public class WeatherActivity extends AppCompatActivity {
             View view = LayoutInflater.from(this).inflate(R.layout.forecast_item, forecastLayout, false);
             TextView dateText = (TextView) view.findViewById(R.id.date_text);       //天气预报日期
             TextView infoText = (TextView) view.findViewById(R.id.info_text);       //天气概括
-            TextView maxText = (TextView) view.findViewById(R.id.max_text);         //最高温度
-            TextView minText = (TextView) view.findViewById(R.id.min_text);         //最低温度
+            TextView minMaxText = (TextView) view.findViewById(R.id.min_max_text);  //温度范围
+            TextView windText = (TextView) view.findViewById(R.id.wind_text);       //风向
             dateText.setText(forecast.date);
             infoText.setText(forecast.more.info);
-            maxText.setText(forecast.temperature.max);
-            minText.setText(forecast.temperature.min);
+            minMaxText.setText(forecast.temperature.min + "~" + forecast.temperature.max + "℃");
+            windText.setText(forecast.wind.dir);
             forecastLayout.addView(view);
         }
         if (weather.aqi != null) {
